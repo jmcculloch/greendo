@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
 # Copyright 2017 Google LLC
 #
@@ -25,14 +25,19 @@ Can be used on the command line by specifying a command and optional values for 
 See help for more details.
 """
 
-from __future__ import print_function, division
+
 
 import argparse
-import cookielib
 import json
 import sys
-import urllib2
 import websocket
+
+if sys.version_info[0] > 2:
+    from http.cookiejar import CookieJar
+    from urllib.request import build_opener, Request, HTTPCookieProcessor
+else:
+    from cookielib import CookieJar
+    from urllib2 import build_opener, Request, HTTPCookieProcessor
 
 from getpass import getpass
 from pprint import pprint, pformat
@@ -238,7 +243,7 @@ class Device(object):
         self.wifi = None
         self.light = None
 
-        for k, v in self.data["attributes"].iteritems():
+        for k, v in self.data["attributes"].items():
             if k == "masterUnit":
                 self.master = _Attr(k, v)
             elif k.startswith("backupCharger_"):
@@ -344,8 +349,8 @@ class Client(object):
     API_URL_SOCKET = "wss://tti.tiwiconnect.com/api/wsrpc"
 
     def __init__(self, username, password):
-        self._cookie_jar = cookielib.CookieJar()
-        self._opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self._cookie_jar))
+        self._cookie_jar = CookieJar()
+        self._opener = build_opener(HTTPCookieProcessor(self._cookie_jar))
 
         self.username = username
         self.session = self._login(username, password)
@@ -390,7 +395,7 @@ class Client(object):
 
         data_str = None
         if data:
-            data_str = json.dumps(data)
+            data_str = json.dumps(data).encode('utf8')
 
         headers = {
             "x-tc-transform": "tti-app",
@@ -401,7 +406,7 @@ class Client(object):
         else:
             headers["x-tc-transformversion"] = "0.2"
 
-        req = urllib2.Request(self.API_URL_PREFIX + path, data=data_str, headers=headers)
+        req = Request(self.API_URL_PREFIX + path, data=data_str, headers=headers)
         return _Response.from_url_resp(self._opener.open(req))
 
     def _login(self, username, password):
@@ -492,7 +497,7 @@ def main():
     email = args.email
     pwd = args.pwd
     if args.email is None:
-        email = raw_input("email: ").strip()
+        email = input("email: ").strip()
     if args.pwd is None:
         pwd = getpass("password: ").strip()
 
