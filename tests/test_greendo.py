@@ -7,7 +7,7 @@ import greendo
 USERNAME='TODO'
 PASSWORD='TODO'
 client = greendo.Client(USERNAME, PASSWORD)
-devices = client._devices()[-1]
+devices = client.devices[-1]
 
 def test_door_status():
     print(devices.door.door_status())
